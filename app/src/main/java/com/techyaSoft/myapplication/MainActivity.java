@@ -1,6 +1,7 @@
 package com.techyaSoft.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.databinding.DataBindingUtil;
 
@@ -15,8 +16,10 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 
 import com.techyaSoft.myapplication.MyCustomViews.DrawLineView;
@@ -28,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
     View control,xLine,yLine;
     DrawLineView drawLineView;
     ConstraintLayout constraintLayout;
-    ImageView imageView;
+    boolean isDraw;
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,70 +44,138 @@ public class MainActivity extends AppCompatActivity {
         drawLineView = findViewById(R.id.custom_view);
         constraintLayout = findViewById(R.id.container);
 
-
         Display mdisp = getWindowManager().getDefaultDisplay();
         Point mdispSize = new Point();
         mdisp.getSize(mdispSize);
         int maxX = mdispSize.x;
         int maxY = mdispSize.y;
+        int size = drawLineView.getHeight();
 
-        Log.i(TAG,maxX+" "+maxY);
+        Log.i(TAG,maxX+" "+maxY+" "+size);
 
 
+        drawLineView.setOnTouchListener(new View.OnTouchListener() {
 
-        control.setOnTouchListener(new View.OnTouchListener() {
+            private GestureDetector gestureDetector = new GestureDetector(MainActivity.this,
+                    new GestureDetector.SimpleOnGestureListener(){
+                        @Override
+                        public boolean onDoubleTap(MotionEvent e) {
+                            Log.i(TAG,"Double TAP");
+                            isDraw = !isDraw;
+                            return super.onDoubleTap(e);
+
+                        }
+                    });
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                gestureDetector.onTouchEvent(event);
                 switch (event.getAction()){
                     case MotionEvent.ACTION_DOWN:
-                        dx=yLine.getX()-event.getRawX();
-                        dy=xLine.getY()-event.getRawY();
-                        cX=v.getX()-event.getRawX();
-                        cY=v.getY()-event.getRawY();
-                        InitX = event.getRawX()+cX;
-                        InitY = event.getRawY()+cY;
-                        Fx = event.getRawX()+cX;
-                        Fy = event.getRawY()+cY;
-                        drawLineView.ActionDown(event.getRawX()+cX,event.getRawY()+cY);
-                        Log.i(TAG,"Action Down "+dx+" "+dy+" "+event.getRawY());
+                        Log.i(TAG,event.getX()+" "+event.getY());
+                        InitX = event.getX();
+                        InitY = event.getY();
+                        xLine.animate()
+                                .y(event.getY())
+                                .setDuration(0)
+                                .start();
+                        yLine.animate()
+                                .x(event.getX())
+                                .setDuration(0)
+                                .start();
                         break;
                     case MotionEvent.ACTION_UP:
-                        float fx = v.getX()-event.getRawX();
-                        float fy = v.getY()-event.getRawY();
                         drawLineView.setImageBitmap(getView());
-                        Log.i(TAG,"Action Up");
-                        break;
-                    case MotionEvent.ACTION_POINTER_UP:
-                        Log.i(TAG,"Action pointer up");
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        Log.i(TAG,"Action Move "+event.getRawY());
-                        my=event.getRawY()+dy;
-                        mx=event.getRawX()+dx;
                         xLine.animate()
-                                    .y(my)
-                                    .setDuration(0)
-                                    .start();
+                                .y(event.getY())
+                                .setDuration(0)
+                                .start();
                         yLine.animate()
-                                    .x(mx)
-                                    .setDuration(0)
-                                    .start();
-                        v.animate().x(event.getRawX()+cX)
-                                    .y(event.getRawY()+cY)
-                                    .setDuration(0)
-                                    .start();
-                        Fx = event.getRawX()+cX;
-                        Fy = event.getRawY()+cY;
-
-                        drawLineView.ActionUp(InitX,
-                                InitY,
-                                Fx,
-                                Fy);
+                                .x(event.getX())
+                                .setDuration(0)
+                                .start();
+                        if (isDraw){
+                            drawLineView.ActionUp(InitX,
+                                    InitY,
+                                    event.getX(),
+                                    event.getY());
+                        }
                         break;
+                    default:
+                        return false;
                 }
                 return true;
             }
         });
+
+
+
+//        control.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                switch (event.getAction()){
+//                    case MotionEvent.ACTION_DOWN:
+//                        dx=yLine.getX()-event.getRawX();
+//                        dy=xLine.getY()-event.getRawY();
+//                        cX=v.getX()-event.getRawX();
+//                        cY=v.getY()-event.getRawY();
+//                        float width = v.getX();
+//                        float height = v.getY();
+//                        Log.i(TAG,width+" "+height);
+//                        InitX = event.getRawX()+cX;
+//                        InitY = event.getRawY()+cY;
+//                        Log.i(TAG,InitX+" "+InitY);
+//                        Fx = event.getRawX()+cX;
+//                        Fy = event.getRawY()+cY;
+//                        drawLineView.ActionDown(event.getRawX()+cX,event.getRawY()+cY);
+//                        break;
+//                    case MotionEvent.ACTION_UP:
+//                        float fx = v.getX()-event.getRawX();
+//                        float fy = v.getY()-event.getRawY();
+//                        drawLineView.setImageBitmap(getView());
+//                        Log.i(TAG,"Action Up");
+//                        break;
+//                    case MotionEvent.ACTION_POINTER_UP:
+//                        Log.i(TAG,"Action pointer up");
+//                        break;
+//                    case MotionEvent.ACTION_MOVE:
+//                        Log.i(TAG,"Action Move "+event.getRawY());
+//                        my=event.getRawY()+dy;
+//                        mx=event.getRawX()+dx;
+//
+//                        if (my<=maxY && mx<=maxX){
+//                            xLine.animate()
+//                                    .y(my)
+//                                    .setDuration(0)
+//                                    .start();
+//                            yLine.animate()
+//                                    .x(mx)
+//                                    .setDuration(0)
+//                                    .start();
+//                            v.animate().x(event.getRawX()+cX)
+//                                    .y(event.getRawY()+cY)
+//                                    .setDuration(0)
+//                                    .start();
+//                        }
+//
+//
+//                        Fx = event.getRawX()+cX;
+//                        Fy = event.getRawY()+cY;
+//                        if (isDraw){
+//                            drawLineView.ActionUp(InitX,
+//                                    InitY,
+//                                    Fx,
+//                                    Fy);
+//                        }
+//
+//
+//                        break;
+//                }
+//                return true;
+//            }
+//        });
     }
 
     private Bitmap getView(){
